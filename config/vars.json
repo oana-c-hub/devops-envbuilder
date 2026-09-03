@@ -1,0 +1,20 @@
+{
+    "install_tools": [
+        {
+            "name": "docker",
+            "version": "latest"
+        },
+        {
+            "name": "python",
+            "version": "3"
+        },
+        {
+            "name": "mysql",
+            "version": "8.0"
+        },
+        {
+            "name": "nodejs",
+            "version": "lts"
+        }
+    ]
+}

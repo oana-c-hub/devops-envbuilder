@@ -1,0 +1,31 @@
+---
+- name: Instalare tehnologii cerute din config
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+    - name: Incarca variabilele din vars.json
+      include_vars:
+        file: config/vars.json
+        name: config_data
+
+    - name: Actualizeaza indecsii apt
+      apt:
+        update_cache: yes
+
+    - name: Instaleaza MySQL Server daca este cerut
+      apt:
+        name: mysql-server
+        state: present
+      when: "'mysql' in (config_data.install_tools | map(attribute='name') | list)"
+
+    - name: Adauga Node.js LTS repository daca este cerut
+      shell: curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+      when: "'nodejs' in (config_data.install_tools | map(attribute='name') | list)"
+
+    - name: Instaleaza Node.js daca este cerut
+      apt:
+        name: nodejs
+        state: present
+      when: "'nodejs' in (config_data.install_tools | map(attribute='name') | list)"
