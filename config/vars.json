@@ -15,6 +15,10 @@
         {
             "name": "nodejs",
             "version": "lts"
+        },
+        {
+            "name": "java",
+            "version": "17"
         }
     ]
 }

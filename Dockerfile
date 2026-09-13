@@ -1,12 +1,14 @@
+# Imagine oficială Python optimizată (slim)
 FROM python:3.11-slim
 
+# Setarea directorului de lucru în container
 WORKDIR /app
 
-# Instalăm dependența YAML
+# Instalarea dependenței necesare pentru parsarea fișierului YAML
 RUN pip install --no-cache-dir pyyaml
 
-# Copiem scriptul de validare
+# Copierea exclusivă a scriptului Python de validare (fără fișiere de configurare)
 COPY validator.py .
 
-# Comanda de rulare
+# Comanda implicită care execută validarea la pornirea containerului
 CMD ["python", "validator.py"]

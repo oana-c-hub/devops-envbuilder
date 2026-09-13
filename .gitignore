@@ -1,0 +1,16 @@
+# Fisiere si binare locale de stare Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.pem
+
+# Configuratie dinamica JSON generata la runtime
+config/vars.json
+
+# Artefacte Python
+__pycache__/
+*.pyc
+
+# Fisiere generate de sistemul de operare
+.DS_Store

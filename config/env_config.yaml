@@ -1,9 +1,23 @@
+# Fișier de configurare pentru DevOps EnvBuilder
+# Definește tehnologiile și versiunile țintă care vor fi validate și instalate
+
 tools:
+  # Engine pentru containerizare
   - name: "docker"
     version: "latest"
+
+  # Mediul de rulare pentru Python
   - name: "python"
     version: "3"
+
+  # Sistem de gestionare a bazelor de date
   - name: "mysql"
     version: "8.0"
+
+  # Mediul de rulare pentru JavaScript
   - name: "nodejs"
     version: "lts"
+
+  # Java Development Kit (suport adăugat pentru Bonus)
+  - name: "java"
+    version: "17"

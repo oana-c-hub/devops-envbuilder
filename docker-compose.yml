@@ -1,7 +1,9 @@
-version: '3.8'
-
 services:
   validator:
+    # Construiește imaginea local folosind Dockerfile-ul din directorul curent
     build: .
+    # Numele imaginii pentru publicare pe Docker Hub
+    image: oanacalitoiu1985/devops-validator:latest
+    # Montarea directorului de configurare ca volum extern
     volumes:
       - ./config:/app/config

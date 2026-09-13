@@ -1,31 +1,56 @@
 ---
-- name: Instalare tehnologii cerute din config
-  hosts: localhost
-  connection: local
+- name: Instalare dinamică tehnologii DevOps conform configurării
+  hosts: all
   become: true
 
   tasks:
-    - name: Incarca variabilele din vars.json
+    - name: Încarcă variabilele din vars.json
       include_vars:
         file: config/vars.json
         name: config_data
 
-    - name: Actualizeaza indecsii apt
+    - name: Extrage lista de nume ale tehnologiilor
+      set_fact:
+        tools_list: "{{ config_data.install_tools | map(attribute='name') | list }}"
+
+    - name: Actualizează indecșii pachetelor apt
       apt:
         update_cache: yes
+        cache_valid_time: 3600
 
-    - name: Instaleaza MySQL Server daca este cerut
+    # 1. DOCKER
+    - name: Instalează Docker Engine dacă este cerut
+      apt:
+        name: docker.io
+        state: present
+      when: "'docker' in tools_list"
+
+    # 2. PYTHON
+    - name: Instalează Python 3 și Pip dacă sunt cerute
+      apt:
+        name:
+          - python3
+          - python3-pip
+        state: present
+      when: "'python' in tools_list"
+
+    # 3. MYSQL
+    - name: Instalează MySQL Server dacă este cerut
       apt:
         name: mysql-server
         state: present
-      when: "'mysql' in (config_data.install_tools | map(attribute='name') | list)"
+      when: "'mysql' in tools_list"
 
-    - name: Adauga Node.js LTS repository daca este cerut
-      shell: curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
-      when: "'nodejs' in (config_data.install_tools | map(attribute='name') | list)"
-
-    - name: Instaleaza Node.js daca este cerut
+    # 4. NODE.JS
+    - name: Instalează Node.js dacă este cerut
       apt:
         name: nodejs
         state: present
-      when: "'nodejs' in (config_data.install_tools | map(attribute='name') | list)"
+      when: "'nodejs' in tools_list"
+
+    # 5. JAVA (Bonus)
+    - name: Instalează OpenJDK 17 dacă este cerut
+      apt:
+        name: openjdk-17-jdk
+        state: present
+      when: "'java' in tools_list"
