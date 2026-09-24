@@ -3,8 +3,6 @@ pipeline {
 
     environment {
         DOCKER_HUB_REPO = 'oanacalitoiu1985/devops-validator:latest'
-        // Numele ID-ului de credențiale salvat în Jenkins (Jenkins -> Manage Jenkins -> Credentials)
-        DOCKER_HUB_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
@@ -39,12 +37,8 @@ pipeline {
             steps {
                 echo '=== Pasul 4: Construire și publicare imagine pe Docker Hub ==='
                 sh "docker build -t ${DOCKER_HUB_REPO} ."
-                
-                // Autentificare securizată pe Docker Hub folosind credențialele din Jenkins
-                withCredentials([usernamePassword(credentialsId: "${DOCKER_HUB_CREDENTIALS_ID}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh "docker push ${DOCKER_HUB_REPO}"
-                }
+                // Execută push folosind sesiunea activă din terminal/sistem
+                sh "docker push ${DOCKER_HUB_REPO}"
             }
         }
     }
