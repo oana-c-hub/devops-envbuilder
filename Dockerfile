@@ -7,7 +7,8 @@ WORKDIR /app
 # Instalarea dependenței necesare pentru parsarea fișierului YAML
 RUN pip install --no-cache-dir pyyaml
 
-# Copierea exclusivă a scriptului Python de validare (fără fișiere de configurare)
+# Copierea folderului config și a scriptului de validare
+COPY config/ ./config/
 COPY validator.py .
 
 # Comanda implicită care execută validarea la pornirea containerului

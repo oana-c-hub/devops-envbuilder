@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-envbuilder-app
+  labels:
+    app: devops-envbuilder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devops-envbuilder
+  template:
+    metadata:
+      labels:
+        app: devops-envbuilder
+    spec:
+      containers:
+      - name: envbuilder
+        image: oanacalitoiu1985/devops-validator:latest
+        imagePullPolicy: Never
+        # Opțional: Dacă scriptul rulează și se închide, poți adăuga un comandament 
+        # care să țină containerul viu pentru a-i putea citi logurile nestingherit:
+        # command: ["/bin/sh", "-c"]
+        # args: ["python validator.py && tail -f /dev/null"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-envbuilder-service
+spec:
+  type: NodePort
+  selector:
+    app: devops-envbuilder
+  ports:
+    - port: 8080
+      targetPort: 8080

@@ -1,22 +1,30 @@
 ---
+# Playbook Ansible pentru instalarea automată a tehnologiilor
 - name: Instalare dinamică tehnologii DevOps conform configurării
   hosts: all
-  become: true
+  become: yes  # Rulează toate task-urile cu drepturi de root (sudo)
 
   tasks:
+    # Task 1: Încărcarea fișierului de variabile generat de scriptul Python
     - name: Încarcă variabilele din vars.json
       include_vars:
         file: config/vars.json
         name: config_data
 
+    # Task 2: Extragerea numelor tehnologiilor din structura JSON
     - name: Extrage lista de nume ale tehnologiilor
       set_fact:
         tools_list: "{{ config_data.install_tools | map(attribute='name') | list }}"
 
+    # Task 3: Actualizarea cache-ului de pachete Linux (eficientizată pe timp)
     - name: Actualizează indecșii pachetelor apt
       apt:
         update_cache: yes
         cache_valid_time: 3600
+
+    # -------------------------------------------------------------
+    # INSTALARE CONDIȚIONATĂ A TEHNOLOGIILOR
+    # -------------------------------------------------------------
 
     # 1. DOCKER
     - name: Instalează Docker Engine dacă este cerut

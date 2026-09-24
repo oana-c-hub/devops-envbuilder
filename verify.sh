@@ -4,12 +4,17 @@ echo "=========================================="
 echo "  Verificare Instalare Tehnologii DevOps  "
 echo "=========================================="
 
+# Căutare flexibilă a fișierului vars.json (în config/ sau în rădăcină)
 VARS_FILE="config/vars.json"
-
-# Verificăm dacă fișierul de variabile generat la validare există
 if [ ! -f "$VARS_FILE" ]; then
-    echo "❌ Eroare: Fișierul '$VARS_FILE' nu a fost găsit!"
-    exit 1
+    if [ -f "vars.json" ]; then
+        VARS_FILE="vars.json"
+    elif [ -f "/app/config/vars.json" ]; then
+        VARS_FILE="/app/config/vars.json"
+    else
+        echo "❌ Eroare: Fișierul de variabile 'vars.json' nu a fost găsit!"
+        exit 1
+    fi
 fi
 
 ERRORS=0
@@ -26,14 +31,19 @@ get_tool_cmd() {
     esac
 }
 
-# Extragere nume tehnologii din vars.json (fără dependență de jq, folosind grep/sed)
+# Extragere nume tehnologii din vars.json folosind grep/cut
 TOOLS=$(grep -o '"name": "[^"]*"' "$VARS_FILE" | cut -d'"' -f4)
+
+if [ -z "$TOOLS" ]; then
+    echo "❌ Eroare: Nu s-a putut extrage nicio tehnologie din $VARS_FILE sau fișierul este gol."
+    exit 1
+fi
 
 for TOOL in $TOOLS; do
     CMD=$(get_tool_cmd "$TOOL")
     echo -n "Verificare $TOOL ($CMD): "
     
-    # Verificăm dacă executabilul există pe server
+    # Verificăm dacă executabilul există pe server în PATH
     if command -v "$CMD" &> /dev/null; then
         VERSION=$("$CMD" --version 2>&1 | head -n 1)
         echo "✅ INSTALAT ($VERSION)"
@@ -45,7 +55,7 @@ done
 
 echo "=========================================="
 
-# Returnăm cod de ieșire corespunzător pentru pipeline-ul Jenkins
+# Returnăm codul de ieșire pentru pipeline-ul CI/CD (Jenkins)
 if [ "$ERRORS" -gt 0 ]; then
     echo "❌ Verificare eșuată! $ERRORS tehnologie/tehnologii din configurare lipsesc."
     exit 1
