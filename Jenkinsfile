@@ -33,6 +33,9 @@ pipeline {
             steps {
                 echo '=== Pasul 3: Instalare tehnologii pe serverul AWS prin Ansible Playbook ==='
                 script {
+                    echo 'Așteptăm 20 de secunde pentru ca serviciul SSH de pe EC2 să pornească complet...'
+                    sh 'sleep 20'
+                    
                     // Preluăm automat IP-ul public creat de Terraform în pasul anterior
                     def instanceIp = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
                     
