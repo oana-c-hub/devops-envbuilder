@@ -5,6 +5,7 @@ import sys
 import yaml
 
 # Lista albă (whitelist) cu tehnologiile suportate oficial de proiect
+# Verificăm dacă instrumentele cerute fac parte din lista noastră de pachete suportate.
 SUPPORTED_TOOLS = ["docker", "python", "mysql", "nodejs", "java"]
 
 def is_valid_version(version: str) -> bool:
@@ -15,11 +16,15 @@ def is_valid_version(version: str) -> bool:
     if not isinstance(version, str) or not version.strip():
         return False
     return bool(re.match(r"^(latest|lts|\d+(\.\d+)*)$", version.strip(), re.IGNORECASE))
+    # Folosește un regex pentru a permite doar versiuni valide
 
 def resolve_file_paths(base_dir: str) -> tuple[str, str]:
     """
     Inspecție în cascadă pentru localizarea fișierelor de configurare și ieșire.
     Verifică pe rând: subfolderul 'config/', rădăcina proiectului și calea absolută din container.
+    Am folosit un mecanism de determinare a căilor pe bază de os.path.abspath(__file__)
+    combinate cu un fallback pe calea din container (/app/config/env_config.yaml). 
+    Astfel, scriptul funcționează perfect atât local, cât și în Kubernetes.
     """
     # 1. Calea standard în subfolderul config/
     config_path = os.path.join(base_dir, "config", "env_config.yaml")
@@ -37,7 +42,7 @@ def resolve_file_paths(base_dir: str) -> tuple[str, str]:
         config_path = "/app/config/env_config.yaml"
         output_path = "/app/config/vars.json"
 
-    # Permite suprascrierea dinamică prin variabile de mediu (ex: folosite în CI/CD sau teste)
+    # Permite suprascrierea dinamică prin variabile de mediu 
     final_config = os.environ.get("CONFIG_PATH", config_path)
     final_output = os.environ.get("OUTPUT_PATH", output_path)
 
@@ -53,17 +58,17 @@ def validate_and_generate():
         with open(config_path, "r", encoding="utf-8") as f:
             config = yaml.safe_load(f)
     except Exception as e:
-        print(f"❌ Eroare la citirea fișierului de configurare ({config_path}): {e}")
+        print(f"Eroare la citirea fișierului de configurare ({config_path}): {e}")
         sys.exit(1) 
 
     # Validare structură fișier YAML
     if not config or not isinstance(config, dict) or "tools" not in config:
-        print("❌ Eroare: Structură YAML invalidă sau lipsește cheia principală 'tools'.")
+        print("Eroare: Structură YAML invalidă sau lipsește cheia principală 'tools'.")
         sys.exit(1)
 
     requested_tools = config.get("tools", [])
     if not isinstance(requested_tools, list):
-        print("❌ Eroare: Cheia 'tools' trebuie să fie o listă de elemente.")
+        print("Eroare: Cheia 'tools' trebuie să fie o listă de elemente.")
         sys.exit(1)
 
     valid_tools = []
@@ -71,29 +76,29 @@ def validate_and_generate():
 
     for item in requested_tools:
         if not isinstance(item, dict):
-            print("❌ Eroare: Fiecare element din 'tools' trebuie să fie un dicționar cu 'name' și 'version'.")
+            print("Eroare: Fiecare element din 'tools' trebuie să fie un dicționar cu 'name' și 'version'.")
             sys.exit(1)
             
         name = item.get("name")
         version = str(item.get("version", "latest"))
 
         if not name:
-            print("❌ Eroare: S-a găsit un element fără nume specificat.")
+            print("Eroare: S-a găsit un element fără nume specificat.")
             sys.exit(1)
 
         # 1. Validare existență tehnologie în lista suportată
         if name not in SUPPORTED_TOOLS:
-            print(f"❌ Eroare: Tehnologia '{name}' NU este suportată! (Suportate: {SUPPORTED_TOOLS})")
+            print(f"Eroare: Tehnologia '{name}' NU este suportată! (Suportate: {SUPPORTED_TOOLS})")
             sys.exit(1)
 
         # 2. Validare format versiune
         if not is_valid_version(version):
-            print(f"❌ Eroare: Versiunea '{version}' pentru tehnologia '{name}' este invalidă!")
+            print(f"Eroare: Versiunea '{version}' pentru tehnologia '{name}' este invalidă!")
             sys.exit(1)
 
         # 3. Tratarea duplicatelor: păstrează ultimul element procesat
         if name in seen_tools:
-            print(f"⚠️ Atenție: Tehnologia '{name}' este duplicată. Se va folosi ultima instanță configurată.")
+            print(f"Atenție: Tehnologia '{name}' este duplicată. Se va folosi ultima instanță configurată.")
             # Eliminăm instanța anterioară din listă pentru curățenie
             valid_tools = [t for t in valid_tools if t["name"] != name]
         
@@ -111,7 +116,7 @@ def validate_and_generate():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output_data, f, indent=4)
 
-    print(f"\n✅ Configurație validă! Fișierul '{os.path.basename(output_path)}' a fost generat cu succes la calea: {output_path}")
+    print(f"\nConfigurație validă! Fișierul '{os.path.basename(output_path)}' a fost generat cu succes la calea: {output_path}")
     sys.exit(0)
 
 if __name__ == "__main__":

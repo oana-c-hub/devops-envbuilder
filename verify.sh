@@ -12,7 +12,7 @@ if [ ! -f "$VARS_FILE" ]; then
     elif [ -f "/app/config/vars.json" ]; then
         VARS_FILE="/app/config/vars.json"
     else
-        echo "❌ Eroare: Fișierul de variabile 'vars.json' nu a fost găsit!"
+        echo "Eroare: Fișierul de variabile 'vars.json' nu a fost găsit!"
         exit 1
     fi
 fi
@@ -35,7 +35,7 @@ get_tool_cmd() {
 TOOLS=$(grep -o '"name": "[^"]*"' "$VARS_FILE" | cut -d'"' -f4)
 
 if [ -z "$TOOLS" ]; then
-    echo "❌ Eroare: Nu s-a putut extrage nicio tehnologie din $VARS_FILE sau fișierul este gol."
+    echo "Eroare: Nu s-a putut extrage nicio tehnologie din $VARS_FILE sau fișierul este gol."
     exit 1
 fi
 
@@ -46,9 +46,9 @@ for TOOL in $TOOLS; do
     # Verificăm dacă executabilul există pe server în PATH
     if command -v "$CMD" &> /dev/null; then
         VERSION=$("$CMD" --version 2>&1 | head -n 1)
-        echo "✅ INSTALAT ($VERSION)"
+        echo "INSTALAT ($VERSION)"
     else
-        echo "❌ NEINSTALAT (Comanda '$CMD' nu a fost găsită)"
+        echo "NEINSTALAT (Comanda '$CMD' nu a fost găsită)"
         ERRORS=$((ERRORS + 1))
     fi
 done
@@ -57,9 +57,9 @@ echo "=========================================="
 
 # Returnăm codul de ieșire pentru pipeline-ul CI/CD (Jenkins)
 if [ "$ERRORS" -gt 0 ]; then
-    echo "❌ Verificare eșuată! $ERRORS tehnologie/tehnologii din configurare lipsesc."
+    echo "Verificare eșuată! $ERRORS tehnologie/tehnologii din configurare lipsesc."
     exit 1
 else
-    echo "✅ Toate tehnologiile solicitate au fost verificate cu succes!"
+    echo "Toate tehnologiile solicitate au fost verificate cu succes!"
     exit 0
 fi

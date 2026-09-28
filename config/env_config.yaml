@@ -18,6 +18,6 @@ tools:
   - name: "nodejs"
     version: "lts"
 
-  # Java Development Kit (suport adăugat pentru Bonus)
+  # Java Development Kit 
   - name: "java"
     version: "17"

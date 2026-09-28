@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        // Stage 1: Validare izolată prin Docker Compose (Cerință Pasul 2 & 3)
+        // Stage 1: Validare izolată prin Docker Compose
         stage('1. Validare Configurare (Docker)') {
             steps {
                 echo '=== Pasul 1: Validare fișier YAML și generare vars.json ==='
@@ -14,7 +14,7 @@ pipeline {
             }
         }
 
-        // Stage 2: Instalare dinamică prin Ansible (Cerință Pasul 3)
+        // Stage 2: Instalare dinamică prin Ansible 
         stage('2. Instalare Ansible') {
             steps {
                 echo '=== Pasul 2: Instalare tehnologii prin Ansible Playbook ==='
@@ -23,7 +23,7 @@ pipeline {
             }
         }
 
-        // Stage 3: Verificare post-instalare (Cerință Pasul 1 & 3)
+        // Stage 3: Verificare post-instalare 
         stage('3. Verificare Tehnologii') {
             steps {
                 echo '=== Pasul 3: Rulare script Bash de verificare ==='
@@ -32,7 +32,7 @@ pipeline {
             }
         }
 
-        // Stage 4: Publicare imagine pe Docker Hub (Cerință Pasul 2 & 3)
+        // Stage 4: Publicare imagine pe Docker Hub 
         stage('4. Docker Build & Push') {
             steps {
                 echo '=== Pasul 4: Construire și publicare imagine pe Docker Hub ==='
@@ -49,10 +49,10 @@ pipeline {
             sh 'docker compose down'
         }
         success {
-            echo '✅ SUCCES: Toate etapele de validare, instalare și verificare au trecut cu succes!'
+            echo 'SUCCES: Toate etapele de validare, instalare și verificare au trecut cu succes!'
         }
         failure {
-            echo '❌ EȘEC: Pipeline-ul a eșuat. Verifică logurile fiecărei etape.'
+            echo 'EȘEC: Pipeline-ul a eșuat. Verifică logurile fiecărei etape.'
         }
     }
 }

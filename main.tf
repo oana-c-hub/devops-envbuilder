@@ -65,7 +65,7 @@ resource "aws_security_group" "envbuilder_sg" {
 # Interogare dinamică pentru cel mai recent AMI Ubuntu 22.04 LTS
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["099720109477"] 
 
   filter {
     name   = "name"
