@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        // Stage 1: Validare izolată prin Docker Compose 
+        // Stage 1: Validare izolată prin Docker Compose
         stage('1. Validare Configurare (Docker)') {
             steps {
                 echo '=== Pasul 1: Validare fișier YAML și generare vars.json ==='
@@ -14,12 +14,17 @@ pipeline {
             }
         }
 
-        // Stage 2: Provizionare Infrastructură AWS EC2 cu Terraform 
+        // Stage 2: Provizionare Infrastructură AWS EC2 cu Terraform (Aici injectăm credențialele AWS!)
         stage('2. Provizionare Infrastructură (Terraform AWS)') {
             steps {
                 echo '=== Pasul 2: Creare instanță EC2 și Security Group în AWS ==='
-                sh 'terraform init'
-                sh 'terraform apply -auto-approve'
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh 'terraform init'
+                    sh 'terraform apply -auto-approve'
+                }
             }
         }
 
@@ -43,7 +48,7 @@ pipeline {
             }
         }
 
-        // Stage 4: Verificare post-instalare 
+        // Stage 4: Verificare post-instalare
         stage('4. Verificare Tehnologii') {
             steps {
                 echo '=== Pasul 4: Rulare script Bash de verificare ==='
@@ -52,12 +57,11 @@ pipeline {
             }
         }
 
-        // Stage 5: Publicare imagine pe Docker Hub 
+        // Stage 5: Publicare imagine pe Docker Hub
         stage('5. Docker Build & Push') {
             steps {
                 echo '=== Pasul 5: Construire și publicare imagine pe Docker Hub ==='
                 sh "docker build -t ${DOCKER_HUB_REPO} ."
-                // Execută push folosind sesiunea activă din terminal/sistem
                 sh "docker push ${DOCKER_HUB_REPO}"
             }
         }
