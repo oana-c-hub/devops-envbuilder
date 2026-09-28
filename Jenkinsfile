@@ -6,7 +6,7 @@ pipeline {
     }
 
     stages {
-        // Stage 1: Validare izolată prin Docker Compose
+        // Stage 1: Validare izolată prin Docker Compose 
         stage('1. Validare Configurare (Docker)') {
             steps {
                 echo '=== Pasul 1: Validare fișier YAML și generare vars.json ==='
@@ -14,28 +14,48 @@ pipeline {
             }
         }
 
-        // Stage 2: Instalare dinamică prin Ansible 
-        stage('2. Instalare Ansible') {
+        // Stage 2: Provizionare Infrastructură AWS EC2 cu Terraform 
+        stage('2. Provizionare Infrastructură (Terraform AWS)') {
             steps {
-                echo '=== Pasul 2: Instalare tehnologii prin Ansible Playbook ==='
-                // Forțăm rularea pe mașina locală pentru a evita eroarea "no hosts matched"
-                sh 'ansible-playbook -i "localhost," -c local playbook.yml'
+                echo '=== Pasul 2: Creare instanță EC2 și Security Group în AWS ==='
+                sh 'terraform init'
+                sh 'terraform apply -auto-approve'
             }
         }
 
-        // Stage 3: Verificare post-instalare 
-        stage('3. Verificare Tehnologii') {
+        // Stage 3: Instalare dinamică prin Ansible pe EC2 în AWS
+        stage('3. Instalare Ansible pe AWS EC2') {
             steps {
-                echo '=== Pasul 3: Rulare script Bash de verificare ==='
+                echo '=== Pasul 3: Instalare tehnologii pe serverul AWS prin Ansible Playbook ==='
+                script {
+                    // Preluăm automat IP-ul public creat de Terraform în pasul anterior
+                    def instanceIp = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
+                    
+                    // Rulăm Ansible direct pe instanța EC2 din AWS folosind cheia SSH
+                    sh """
+                        ansible-playbook -i "${instanceIp}," \
+                        -u ubuntu \
+                        --private-key envbuilder-key.pem \
+                        playbook.yml \
+                        --ssh-common-args='-o StrictHostKeyChecking=no'
+                    """
+                }
+            }
+        }
+
+        // Stage 4: Verificare post-instalare 
+        stage('4. Verificare Tehnologii') {
+            steps {
+                echo '=== Pasul 4: Rulare script Bash de verificare ==='
                 sh 'chmod +x verify.sh'
                 sh './verify.sh'
             }
         }
 
-        // Stage 4: Publicare imagine pe Docker Hub 
-        stage('4. Docker Build & Push') {
+        // Stage 5: Publicare imagine pe Docker Hub 
+        stage('5. Docker Build & Push') {
             steps {
-                echo '=== Pasul 4: Construire și publicare imagine pe Docker Hub ==='
+                echo '=== Pasul 5: Construire și publicare imagine pe Docker Hub ==='
                 sh "docker build -t ${DOCKER_HUB_REPO} ."
                 // Execută push folosind sesiunea activă din terminal/sistem
                 sh "docker push ${DOCKER_HUB_REPO}"
@@ -45,11 +65,11 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline-ul s-a finalizat! Începe curățarea containerelor...'
+            echo 'Pipeline-ul s-a finalizat! Începe curățarea containerelor locale...'
             sh 'docker compose down'
         }
         success {
-            echo 'SUCCES: Toate etapele de validare, instalare și verificare au trecut cu succes!'
+            echo 'SUCCES: Toate etapele de validare, provizionare AWS, instalare Ansible și verificare au trecut cu succes!'
         }
         failure {
             echo 'EȘEC: Pipeline-ul a eșuat. Verifică logurile fiecărei etape.'
