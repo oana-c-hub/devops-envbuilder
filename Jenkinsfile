@@ -14,7 +14,7 @@ pipeline {
             }
         }
 
-        // Stage 2: Provizionare Infrastructură AWS EC2 cu Terraform (Aici injectăm credențialele AWS!)
+        // Stage 2: Provizionare Infrastructură AWS EC2 cu Terraform
         stage('2. Provizionare Infrastructură (Terraform AWS)') {
             steps {
                 echo '=== Pasul 2: Creare instanță EC2 și Security Group în AWS ==='
@@ -22,8 +22,11 @@ pipeline {
                     string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
                     string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
-                    sh 'terraform init -input=false -reconfigure'
-                    sh 'terraform apply -auto-approve'
+                    sh '''
+                        rm -rf .terraform .terraform.lock.hcl
+                        terraform init -input=false -force-copy -reconfigure
+                        terraform apply -auto-approve
+                    '''
                 }
             }
         }
