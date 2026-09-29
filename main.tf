@@ -1,9 +1,26 @@
 terraform {
+  required_version = ">= 1.0.0"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+    local = {
+      source  = "hashicorp/local"
+      version = "~> 2.0"
+    }
+  }
+
+  # Configurare Remote Backend pe S3 pentru sincronizarea stării
+  backend "s3" {
+    bucket = "devops-envbuilder-tfstate-oana"
+    key    = "state/terraform.tfstate"
+    region = "eu-central-1"
   }
 }
 
@@ -11,7 +28,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Generare automată pereche de chei RSA de 4096 biți
+# Generare automată pereche de chei RSA 
 resource "tls_private_key" "devops_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
