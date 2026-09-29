@@ -35,21 +35,26 @@ pipeline {
         stage('3. Instalare Ansible pe AWS EC2') {
             steps {
                 echo '=== Pasul 3: Instalare tehnologii pe serverul AWS prin Ansible Playbook ==='
-                script {
-                    echo 'Așteptăm 20 de secunde pentru ca serviciul SSH de pe EC2 să pornească complet...'
-                    sh 'sleep 20'
-                    
-                    // Preluăm automat IP-ul public creat de Terraform în pasul anterior
-                    def instanceIp = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
-                    
-                    // Rulăm Ansible direct pe instanța EC2 din AWS folosind cheia SSH
-                    sh """
-                        ansible-playbook -i "${instanceIp}," \
-                        -u ubuntu \
-                        --private-key envbuilder-key.pem \
-                        playbook.yml \
-                        --ssh-common-args='-o StrictHostKeyChecking=no'
-                    """
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    script {
+                        echo 'Așteptăm 20 de secunde pentru ca serviciul SSH de pe EC2 să pornească complet...'
+                        sh 'sleep 20'
+                        
+                        // Preluăm automat IP-ul public creat de Terraform în pasul anterior
+                        def instanceIp = sh(script: "terraform output -raw public_ip", returnStdout: true).trim()
+                        
+                        // Rulăm Ansible direct pe instanța EC2 din AWS folosind cheia SSH
+                        sh """
+                            ansible-playbook -i "${instanceIp}," \
+                            -u ubuntu \
+                            --private-key envbuilder-key.pem \
+                            playbook.yml \
+                            --ssh-common-args='-o StrictHostKeyChecking=no'
+                        """
+                    }
                 }
             }
         }
